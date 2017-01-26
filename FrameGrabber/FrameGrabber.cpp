@@ -52,15 +52,23 @@ int main()
 
 	// Test
 	Mat image = Mat();
+	// Make resized image copy for view window size
 	Mat small_image = Mat();
-	Size small_image_size = Size(640, 480);
+	Size small_image_size = Size(720, 540); // Original ratio: 1440 x 1080
 	video.read(image);
 	resize(image, small_image, small_image_size);
 
-	namedWindow("Test frame", WINDOW_NORMAL);
+	namedWindow("Test frame", WINDOW_AUTOSIZE);
 	imshow("Test frame", small_image);
-	waitKey(0);
+	while (1) {
+		char key_pressed = waitKey(0);
+		if (key_pressed == 'a' || key_pressed == 'r' || key_pressed == 'S') {
+			break;
+		}
+	}
 	string write_image = "output/frame.jpg";
+	cout << "Closing window" << endl;
+	destroyAllWindows();
 	
 	
 	//string jpg_extension = ".jpg";
