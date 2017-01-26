@@ -12,12 +12,12 @@ Interval::Interval(string intervalName)
 }
 
 // Three-arg constructor for full data
-Interval::Interval(string intervalName, string intervalStart, string intervalEnd)
+Interval::Interval(string intervalName, double intervalStart, double intervalEnd)
 {
 	name = intervalName;
 	startTime = intervalStart;
 	endTime = intervalEnd;
-	calculateElapsed();
+	calculateLength();
 }
 
 // Destructor
@@ -26,21 +26,21 @@ Interval::~Interval()
 }
 
 // Getter method for starting time
-string Interval::getStartTime()
+double Interval::getStartTime()
 {
 	return startTime;
 }
 
 // Getter method for ending time
-string Interval::getEndTime()
+double Interval::getEndTime()
 {
 	return endTime;
 }
 
 // Getter method for interval length
-string Interval::getElapsedTime()
+double Interval::getLength()
 {
-	return elapsedTime;
+	return length;
 }
 
 // Getter method for name
@@ -50,25 +50,25 @@ string Interval::getName()
 }
 
 // Setter method for start time
-void Interval::setStartTime(string newStartTime)
+void Interval::setStartTime(double newStartTime)
 {
 	startTime = newStartTime;
-	calculateElapsed();
+	calculateLength();
 }
 
 // Setter method for end time
-void Interval::setEndTime(string newEndTime)
+void Interval::setEndTime(double newEndTime)
 {
 	endTime = newEndTime;
-	calculateElapsed();
+	calculateLength();
 }
 
 // Setter method for both times
-void Interval::setTimes(string newStartTime, string newEndTime)
+void Interval::setTimes(double newStartTime, double newEndTime)
 {
 	startTime = newStartTime;
 	endTime = newEndTime;
-	calculateElapsed();
+	calculateLength();
 }
 
 // Setter method for name
@@ -77,8 +77,8 @@ void Interval::setName(string newName)
 	name = newName;
 }
 
-// TODO: Setter method for interval length
-void Interval::calculateElapsed()
+// Setter method for interval length
+void Interval::calculateLength()
 {
-
+	length = endTime - startTime;
 }

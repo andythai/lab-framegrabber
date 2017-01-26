@@ -10,28 +10,28 @@ public:
 	// Constructors
 	Interval();
 	Interval(string intervalName);
-	Interval(string intervalName, string intervalStart, string intervalEnd);
+	Interval(string intervalName, double intervalStart, double intervalEnd);
 	~Interval();
 
 	// Getter methods
-	string getStartTime();
-	string getEndTime();
-	string getElapsedTime();
+	double getStartTime();
+	double getEndTime();
+	double getLength();
 	string getName();
 
 	// Setter methods
-	void setStartTime(string newStartTime);
-	void setEndTime(string newEndTime);
-	void setTimes(string newStartTime, string newEndTime);
+	void setStartTime(double newStartTime);
+	void setEndTime(double newEndTime);
+	void setTimes(double newStartTime, double newEndTime);
 	void setName(string newName);
 
 	// Calculations
-	void calculateElapsed();
+	void calculateLength();
 
 private:
 	// Variables
 	string name;
-	string startTime;
-	string endTime;
-	string elapsedTime;
+	double startTime;
+	double endTime;
+	double length;
 };
