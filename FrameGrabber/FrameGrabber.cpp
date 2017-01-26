@@ -31,8 +31,8 @@ static void filter();
 // TODO: Main method
 int main()
 {
-	cout << "Starting FrameGrabber program..." << endl;
-	cout << "Using OpenCV version " << CV_VERSION << "\n" << endl;
+	cout << "FrameGrabber\nAuthor: Andy Thai" << endl;
+	cout << "\nUsing OpenCV version " << CV_VERSION << endl;
 	if (DEBUG) {
 		cout << getBuildInformation();
 	}
@@ -50,7 +50,18 @@ int main()
 		return 1;
 	}
 
-	// Test
+	// Print controls
+	cout << "\nThis program will grab a frame from the previously loaded video." << endl << 
+		"CONTROLS:" << endl << 
+		"\ta: Accept" << endl << 
+		"\t\tThe program will accept the frame and save it in the output folder." << 
+		"\n\tr: Reject" << endl << 
+		"\t\tThe program will reject the frame and will select another one." << endl <<
+		"\tS: Skip" << endl << 
+		"\t\tThe program will skip the current interval and go to the next one." << endl <<
+		"\t\tNOTE: To skip, you must press capital S (Shift + S)." << endl;
+
+	// TEST
 	Mat image = Mat();
 	// Make resized image copy for view window size
 	Mat small_image = Mat();
@@ -60,6 +71,8 @@ int main()
 
 	namedWindow("Test frame", WINDOW_AUTOSIZE);
 	imshow("Test frame", small_image);
+
+	// Check for valid key input
 	while (1) {
 		char key_pressed = waitKey(0);
 		if (key_pressed == 'a' || key_pressed == 'r' || key_pressed == 'S') {
