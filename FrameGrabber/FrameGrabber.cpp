@@ -1,14 +1,14 @@
 // FrameGrabber.cpp : Defines the entry point for the console application.
 // Andy Thai
 // Dependencies:
-//		QT
-//		OpenCV
+//		OpenCV 3.10.3
 
 #include "stdafx.h"
 #include "Interval.h"
 #define USE_FFMPEG
 
 using namespace std;
+namespace fs = std::experimental::filesystem;
 using namespace cv;
 
 // Constant variables
@@ -35,6 +35,19 @@ int main()
 	cout << "\nUsing OpenCV version " << CV_VERSION << endl;
 	if (DEBUG) {
 		cout << getBuildInformation();
+	}
+
+	// Check if input and output directories exist
+	if (!fs::exists("input")) { // Check if input folder exists
+		cout << "\nNo input folder detected! Creating input folder." << endl <<
+			"FrameGrabber will shut down. Please move your input files to the input folder." << endl;
+		fs::create_directory("input"); // create input folder
+		cin.ignore();
+		return 1;
+	}
+	if (!fs::exists("output")) { // Check if output folder exists
+		cout << "\nCreating output folder..." << endl;
+		fs::create_directory("output"); // create output folder
 	}
 
 	// Load files
@@ -66,6 +79,7 @@ int main()
 	// Make resized image copy for view window size
 	Mat small_image = Mat();
 	Size small_image_size = Size(720, 540); // Original ratio: 1440 x 1080
+
 	video.read(image);
 	resize(image, small_image, small_image_size);
 
@@ -117,6 +131,9 @@ static void load_video()
 	if (video_filename == "") {
 		video_filename = TEST_MP4;
 	}
+	else {
+		video_filename = "input/" + video_filename;
+	}
 
 	// Initialize and load video into VideoCapture class
 	video = VideoCapture();
@@ -132,6 +149,9 @@ static void load_video()
 		getline(cin, video_filename);
 		if (video_filename == "") {
 			video_filename = TEST_MP4;
+		}
+		else {
+			video_filename = "input/" + video_filename;
 		}
 		video.release();
 		video.open(video_filename, CAP_FFMPEG);
@@ -151,6 +171,9 @@ static void load_csv()
 	if (csv_filename == "") {
 		csv_filename = TEST_CSV;
 	}
+	else {
+		csv_filename = "input/" + csv_filename;
+	}
 
 	// Loading csv
 	ifstream in_stream(csv_filename, ios::binary);
@@ -163,6 +186,9 @@ static void load_csv()
 		getline(cin, csv_filename);
 		if (csv_filename == "") {
 			csv_filename = TEST_CSV;
+		}
+		else {
+			csv_filename = "input/" + csv_filename;
 		}
 		in_stream.close();
 		in_stream.open(csv_filename, ios::binary);
@@ -279,7 +305,7 @@ static void filter() {
 		
 	}
 
-	for (int i = 0; i < intervals.size(); i++) {
+	for (int i = 0; i < (int)intervals.size(); i++) {
 		cout << intervals[i].getLength() << endl;
 	}
 

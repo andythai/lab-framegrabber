@@ -17,6 +17,7 @@
 #include <string>
 #include <fstream>
 #include <vector>
+#include <experimental/filesystem>
 
 // OpenCV 3.10.3
 #include <opencv2/core/core.hpp>
