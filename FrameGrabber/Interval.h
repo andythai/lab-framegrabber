@@ -14,9 +14,12 @@ public:
 	~Interval();
 
 	// Getter methods
-	double getStartTime();
-	double getEndTime();
-	double getLength();
+	double getStartTimeSeconds();
+	double getEndTimeSeconds();
+	double getLengthSeconds();
+	double getStartTimeMs();
+	double getEndTimeMs();
+	double getLengthMs();
 	string getName();
 
 	// Setter methods

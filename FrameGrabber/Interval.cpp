@@ -26,21 +26,39 @@ Interval::~Interval()
 }
 
 // Getter method for starting time
-double Interval::getStartTime()
+double Interval::getStartTimeSeconds()
 {
 	return startTime;
 }
 
 // Getter method for ending time
-double Interval::getEndTime()
+double Interval::getEndTimeSeconds()
 {
 	return endTime;
 }
 
 // Getter method for interval length
-double Interval::getLength()
+double Interval::getLengthSeconds()
 {
 	return length;
+}
+
+// Getter method for starting time
+double Interval::getStartTimeMs()
+{
+	return startTime * 1000;
+}
+
+// Getter method for ending time
+double Interval::getEndTimeMs()
+{
+	return endTime * 1000;
+}
+
+// Getter method for interval length
+double Interval::getLengthMs()
+{
+	return length * 1000;
 }
 
 // Getter method for name

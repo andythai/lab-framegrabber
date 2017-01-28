@@ -7,9 +7,9 @@
 #include "Interval.h"
 #define USE_FFMPEG
 
-using namespace std;
 namespace fs = std::experimental::filesystem;
 using namespace cv;
+using namespace std;
 
 // Constant variables
 const string AIR_ACTIVE = "Air Active";
@@ -18,10 +18,13 @@ const string INTERIM = "Interim";
 const bool DEBUG = false;
 const string TEST_MP4 = "input/CSD2122sub-111615.mp4";
 const string TEST_CSV = "input/CSD2122sub-111615.csv";
+const unsigned int MAX_FRAMES = 3;
 
 // Variables
 vector<Interval> intervals;		// Container for intervals
 VideoCapture video;				// Loads the video
+string video_filename;			// Video's name
+bool frame_active = true;		// True if frame grabbing for active rat, false if recording for passive rat
 
 // Forward declarations
 static void load_video();
@@ -36,6 +39,8 @@ int main()
 	if (DEBUG) {
 		cout << getBuildInformation();
 	}
+
+	srand(time(NULL)); // Set seed for randomness
 
 	// Check if input and output directories exist
 	if (!fs::exists("input")) { // Check if input folder exists
@@ -79,42 +84,97 @@ int main()
 	// Make resized image copy for view window size
 	Mat small_image = Mat();
 	Size small_image_size = Size(720, 540); // Original ratio: 1440 x 1080
+	string output_directory = "output/";
 
-	video.read(image);
-	resize(image, small_image, small_image_size);
+	// Setting location to save frames
+	string video_cut = video_filename.substr(video_filename.find("/") + 1, video_filename.length());	// Cut down on filename
+	video_cut = video_cut.substr(0, video_cut.find("-") + 1);	// Cut down on filename again	
+	string video_date = video_filename.substr(video_filename.find("-") + 1, video_filename.length());
+	video_date = video_date.substr(0, video_date.find("."));			// Date
+	string jpg_extension = ".jpg";
 
-	namedWindow("Test frame", WINDOW_AUTOSIZE);
-	imshow("Test frame", small_image);
+	string prefix;
+	if (frame_active) {
+		prefix = "-A";
+	}
+	else {
+		prefix = "-P";
+	}
+	string video_name = output_directory + video_cut + video_date;
+	string frame_directory = video_name + prefix;
 
-	// Check for valid key input
-	while (1) {
-		char key_pressed = waitKey(0);
-		if (key_pressed == 'a' || key_pressed == 'r' || key_pressed == 'S') {
-			break;
+	// Iterate through each interval
+	for (int i = 0; i < (int)intervals.size(); i++) {
+		cout << "\nInterval " << i + 1 << "/" << intervals.size() << endl;
+		cout << "Interval start time: " << intervals[i].getStartTimeSeconds() << " seconds" << endl;
+		cout << "Interval end time: " << intervals[i].getEndTimeSeconds() << " seconds" << endl;
+		cout << "Interval length: " << intervals[i].getLengthSeconds() << " seconds" << endl;
+		int num_frames = 0;
+		double curr_start = intervals[i].getStartTimeMs();
+		double curr_end = intervals[i].getEndTimeMs();
+
+		// Repeat until frames grabbed reaches MAX_FRAMES
+		while (num_frames < MAX_FRAMES) {
+			double random_frame = (curr_end - curr_start) * ((double)rand() / (double)RAND_MAX) + curr_start;
+			string window_title = "Interval " + to_string(i + 1) + "/" + to_string(intervals.size()) +
+				", Frame " + to_string(num_frames + 1) + "/" + to_string(MAX_FRAMES);
+			cout << "Grabbing frame at " << random_frame / 1000 << " seconds." << endl;
+			video.set(CV_CAP_PROP_POS_MSEC, random_frame);
+			video.read(image);
+			resize(image, small_image, small_image_size);
+			namedWindow(window_title, WINDOW_AUTOSIZE);
+			imshow(window_title, small_image);
+
+			int random_frame_min = random_frame / 1000 / 60; // in seconds
+			int random_frame_sec = (random_frame / 1000 - random_frame_min * 60);
+			int random_frame_ms = round((random_frame / 1000 - random_frame_min * 60 - random_frame_sec) * 10);
+			if (random_frame_ms == 10) {
+				random_frame_ms = 0;
+			}
+			
+			string directory_min = to_string(random_frame_min);
+			if (directory_min.length() == 1) {
+				directory_min = "0" + directory_min;
+			}
+			string directory_sec = to_string(random_frame_sec);
+			if (directory_sec.length() == 1) {
+				directory_sec = "0" + directory_sec;
+			}
+			string directory_ms1000 = to_string(random_frame_ms);
+
+			string image_directory = frame_directory + directory_min + "_" + directory_sec + "_" + directory_ms1000 + jpg_extension;
+
+			//cout << random_frame_min << " minutes, " << random_frame_sec << " seconds, " << random_frame_ms << " ms*1000" << endl;
+
+			// Check for valid key input
+			while (1) {
+				char key_pressed = waitKey(0);
+				if (key_pressed == 'a') {
+					cout << "Frame at " << random_frame / 1000 << " seconds ACCEPTED!" << endl;
+					num_frames++;
+					cout << "Saving frame at " << image_directory << endl << endl;
+					imwrite(image_directory, image);
+					destroyAllWindows();
+					break;
+				}
+				else if (key_pressed == 'r') {
+					cout << "Frame at " << random_frame / 1000 << " seconds REJECTED!" << endl;
+					destroyAllWindows();
+					break;
+				}
+				else if (key_pressed == 'S') {
+					cout << "Interval " << to_string(i) << " SKIPPED!" << endl;
+					num_frames = MAX_FRAMES;
+					destroyAllWindows();
+					break;
+				}
+			}
 		}
 	}
-	string write_image = "output/frame.jpg";
-	cout << "Closing window" << endl;
-	destroyAllWindows();
-	
-	
-	//string jpg_extension = ".jpg";
-	/*
-	for (int i = 0; i < 10; i++) { // Need QT framework
-		video.read(image);
-		Mat small = Mat();
-		Size small_size(640, 480);
-		resize(image, small, small_size);
-		namedWindow("Frame " + to_string(i), WINDOW_NORMAL);
-		//resizeWindow("Frame" + to_string(i), 600, 600); //720 540
-		imshow("Frame " + to_string(i), small);
-		waitKey(0);
-		imwrite(write_image + to_string(i) + jpg_extension, image);
-	}
-	*/
 
 	// Exit behavior
-	cout << "\nPress ENTER to exit program." << endl;
+	cout << endl << video_filename << " frame grabbing concluded!" << endl;
+	cout << "Press ENTER to exit program." << endl;
 	cin.ignore();
     return 0;
 }
@@ -124,7 +184,6 @@ static void load_video()
 {
 	// Get video file location
 	cout << "Input video file: ";
-	std::string video_filename;
 	getline(cin, video_filename);
 
 	// Default test file if none specified
@@ -295,7 +354,7 @@ static void filter() {
 	vector<Interval>::iterator it;
 	for (it = intervals.begin(); it != intervals.end();) {
 		
-		if (it->getLength() < threshold) {
+		if (it->getLengthSeconds() < threshold) {
 			num_pruned++;
 			it = intervals.erase(it);
 		}
@@ -306,7 +365,7 @@ static void filter() {
 	}
 
 	for (int i = 0; i < (int)intervals.size(); i++) {
-		cout << intervals[i].getLength() << endl;
+		cout << intervals[i].getLengthSeconds() << endl;
 	}
 
 	cout << "Pruned " << num_pruned << " intervals." << endl;
