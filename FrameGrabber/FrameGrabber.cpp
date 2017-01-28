@@ -30,8 +30,9 @@ bool frame_active = true;		// True if frame grabbing for active rat, false if re
 static void load_video();
 static void load_csv();
 static void filter();
+static void grab_frames();
 
-// TODO: Main method
+// Main method
 int main()
 {
 	cout << "FrameGrabber\nAuthor: Andy Thai" << endl;
@@ -40,7 +41,7 @@ int main()
 		cout << getBuildInformation();
 	}
 
-	srand(time(NULL)); // Set seed for randomness
+	srand((unsigned int)time(NULL)); // Set seed for randomness
 
 	// Check if input and output directories exist
 	if (!fs::exists("input")) { // Check if input folder exists
@@ -68,6 +69,26 @@ int main()
 		return 1;
 	}
 
+	// Prompt for choosing active or passive rat
+	string frame_focus;
+	bool focus_valid_input = false;
+	cout << "\n(A)ctive or (P)assive: ";
+	while (!focus_valid_input) {
+		getline(cin, frame_focus);
+		if (frame_focus == "a" || frame_focus == "A") {
+			frame_active = true;
+			focus_valid_input = true;
+		}
+		else if (frame_focus == "p" || frame_focus == "P") {
+			frame_active = false;
+			focus_valid_input = true;
+		}
+		else {
+			focus_valid_input = false;
+			cout << "Invalid input. Please enter in a or p." << endl;
+		}
+	}
+
 	// Print controls
 	cout << "\nThis program will grab a frame from the previously loaded video." << endl << 
 		"CONTROLS:" << endl << 
@@ -77,100 +98,11 @@ int main()
 		"\t\tThe program will reject the frame and will select another one." << endl <<
 		"\tS: Skip" << endl << 
 		"\t\tThe program will skip the current interval and go to the next one." << endl <<
-		"\t\tNOTE: To skip, you must press capital S (Shift + S)." << endl;
+		"\t\tNOTE: To skip, you must press capital S (Shift + S)." << endl <<
+		"WARNING: DO NOT close the image window manually!" << endl << endl;
 
-	// TEST
-	Mat image = Mat();
-	// Make resized image copy for view window size
-	Mat small_image = Mat();
-	Size small_image_size = Size(720, 540); // Original ratio: 1440 x 1080
-	string output_directory = "output/";
-
-	// Setting location to save frames
-	string video_cut = video_filename.substr(video_filename.find("/") + 1, video_filename.length());	// Cut down on filename
-	video_cut = video_cut.substr(0, video_cut.find("-") + 1);	// Cut down on filename again	
-	string video_date = video_filename.substr(video_filename.find("-") + 1, video_filename.length());
-	video_date = video_date.substr(0, video_date.find("."));			// Date
-	string jpg_extension = ".jpg";
-
-	string prefix;
-	if (frame_active) {
-		prefix = "-A";
-	}
-	else {
-		prefix = "-P";
-	}
-	string video_name = output_directory + video_cut + video_date;
-	string frame_directory = video_name + prefix;
-
-	// Iterate through each interval
-	for (int i = 0; i < (int)intervals.size(); i++) {
-		cout << "\nInterval " << i + 1 << "/" << intervals.size() << endl;
-		cout << "Interval start time: " << intervals[i].getStartTimeSeconds() << " seconds" << endl;
-		cout << "Interval end time: " << intervals[i].getEndTimeSeconds() << " seconds" << endl;
-		cout << "Interval length: " << intervals[i].getLengthSeconds() << " seconds" << endl;
-		int num_frames = 0;
-		double curr_start = intervals[i].getStartTimeMs();
-		double curr_end = intervals[i].getEndTimeMs();
-
-		// Repeat until frames grabbed reaches MAX_FRAMES
-		while (num_frames < MAX_FRAMES) {
-			double random_frame = (curr_end - curr_start) * ((double)rand() / (double)RAND_MAX) + curr_start;
-			string window_title = "Interval " + to_string(i + 1) + "/" + to_string(intervals.size()) +
-				", Frame " + to_string(num_frames + 1) + "/" + to_string(MAX_FRAMES);
-			cout << "Grabbing frame at " << random_frame / 1000 << " seconds." << endl;
-			video.set(CV_CAP_PROP_POS_MSEC, random_frame);
-			video.read(image);
-			resize(image, small_image, small_image_size);
-			namedWindow(window_title, WINDOW_AUTOSIZE);
-			imshow(window_title, small_image);
-
-			int random_frame_min = random_frame / 1000 / 60; // in seconds
-			int random_frame_sec = (random_frame / 1000 - random_frame_min * 60);
-			int random_frame_ms = round((random_frame / 1000 - random_frame_min * 60 - random_frame_sec) * 10);
-			if (random_frame_ms == 10) {
-				random_frame_ms = 0;
-			}
-			
-			string directory_min = to_string(random_frame_min);
-			if (directory_min.length() == 1) {
-				directory_min = "0" + directory_min;
-			}
-			string directory_sec = to_string(random_frame_sec);
-			if (directory_sec.length() == 1) {
-				directory_sec = "0" + directory_sec;
-			}
-			string directory_ms1000 = to_string(random_frame_ms);
-
-			string image_directory = frame_directory + directory_min + "_" + directory_sec + "_" + directory_ms1000 + jpg_extension;
-
-			//cout << random_frame_min << " minutes, " << random_frame_sec << " seconds, " << random_frame_ms << " ms*1000" << endl;
-
-			// Check for valid key input
-			while (1) {
-				char key_pressed = waitKey(0);
-				if (key_pressed == 'a') {
-					cout << "Frame at " << random_frame / 1000 << " seconds ACCEPTED!" << endl;
-					num_frames++;
-					cout << "Saving frame at " << image_directory << endl << endl;
-					imwrite(image_directory, image);
-					destroyAllWindows();
-					break;
-				}
-				else if (key_pressed == 'r') {
-					cout << "Frame at " << random_frame / 1000 << " seconds REJECTED!" << endl;
-					destroyAllWindows();
-					break;
-				}
-				else if (key_pressed == 'S') {
-					cout << "Interval " << to_string(i) << " SKIPPED!" << endl;
-					num_frames = MAX_FRAMES;
-					destroyAllWindows();
-					break;
-				}
-			}
-		}
-	}
+	// Start frame grabbing process
+	grab_frames();
 
 	// Exit behavior
 	cout << endl << video_filename << " frame grabbing concluded!" << endl;
@@ -300,6 +232,7 @@ static void load_csv()
 	in_stream.close();
 }
 
+// Filter out intervals that are too short
 static void filter() {
 	cout << "You have the option to enable a filter. Doing so will remove\n" <<
 		"all intervals less than the specified value. Enable filter? (y/n): ";
@@ -371,4 +304,108 @@ static void filter() {
 	cout << "Pruned " << num_pruned << " intervals." << endl;
 	cout << "Total amount of csv intervals: " << intervals.size() << endl;
 	return;
+}
+
+// Grab frames
+static void grab_frames() {
+	Mat image = Mat();
+	// Make resized image copy for view window size
+	Mat small_image = Mat();
+	Size small_image_size = Size(720, 540); // Original ratio: 1440 x 1080
+	string output_directory = "output/";
+
+	// Setting location to save frames
+	string video_cut = video_filename.substr(video_filename.find("/") + 1, video_filename.length());	// Cut down on filename
+	video_cut = video_cut.substr(0, video_cut.find("-") + 1);	// Cut down on filename again	
+	string video_date = video_filename.substr(video_filename.find("-") + 1, video_filename.length());
+	video_date = video_date.substr(0, video_date.find("."));			// Date
+	string jpg_extension = ".jpg";
+
+	string prefix;
+	if (frame_active) {
+		prefix = "-A";
+	}
+	else {
+		prefix = "-P";
+	}
+	string video_name = output_directory + video_cut + video_date + "/" + video_cut + video_date;
+	string video_name_directory = output_directory + video_cut + video_date + "/";
+
+	if (!fs::exists(video_name_directory)) { // Check if output folder exists
+		cout << "\nCreating output subdirectory folder at " << video_name_directory << endl;
+		fs::create_directory(video_name_directory); // create output folder
+	}
+	string frame_directory = video_name + prefix;
+
+	// Iterate through each interval
+	for (int i = 0; i < (int)intervals.size(); i++) {
+		cout << "\nInterval " << i + 1 << "/" << intervals.size() << endl;
+		cout << "Interval start time: " << intervals[i].getStartTimeSeconds() << " seconds" << endl;
+		cout << "Interval end time: " << intervals[i].getEndTimeSeconds() << " seconds" << endl;
+		cout << "Interval length: " << intervals[i].getLengthSeconds() << " seconds" << endl << endl;
+		int num_frames = 0;
+		double curr_start = intervals[i].getStartTimeMs();
+		double curr_end = intervals[i].getEndTimeMs();
+
+		// Repeat until frames grabbed reaches MAX_FRAMES
+		while (num_frames < MAX_FRAMES) {
+			double random_frame = (curr_end - curr_start) * ((double)rand() / (double)RAND_MAX) + curr_start;
+			string window_title = "Interval " + to_string(i + 1) + "/" + to_string(intervals.size()) +
+				", Frame " + to_string(num_frames + 1) + "/" + to_string(MAX_FRAMES);
+			cout << "-------------------------------------------------------------------------" << endl;
+			cout << "Grabbing frame at " << random_frame / 1000 << " seconds." << endl;
+			video.set(CV_CAP_PROP_POS_MSEC, random_frame);
+			video.read(image);
+			resize(image, small_image, small_image_size);
+			namedWindow(window_title, WINDOW_AUTOSIZE);
+			imshow(window_title, small_image);
+
+			// Calculate generated frame time
+			int random_frame_min = (int)(random_frame / 1000.0 / 60.0); // in seconds
+			int random_frame_sec = (int)(random_frame / 1000.0 - random_frame_min * 60.0);
+			int random_frame_ms = (int)round((random_frame / 1000.0 - random_frame_min * 60.0 - random_frame_sec) * 10.0);
+			if (random_frame_ms == 10) {
+				random_frame_ms = 0;
+			}
+
+			// Modify to fit format
+			string directory_min = to_string(random_frame_min);
+			if (directory_min.length() == 1) {
+				directory_min = "0" + directory_min;
+			}
+			string directory_sec = to_string(random_frame_sec);
+			if (directory_sec.length() == 1) {
+				directory_sec = "0" + directory_sec;
+			}
+			string directory_ms1000 = to_string(random_frame_ms);
+			string image_directory = frame_directory + directory_min + "_" + directory_sec + "_" + directory_ms1000 + jpg_extension;
+
+			// Check for valid key input
+			while (1) {
+				char key_pressed = waitKey(0);
+				if (key_pressed == 'a') {
+					cout << "Frame at " << random_frame / 1000 << " seconds ACCEPTED!" << endl;
+					num_frames++;
+					cout << "Saving frame at " << image_directory << endl;
+					cout << "-------------------------------------------------------------------------" << endl << endl;
+					imwrite(image_directory, image);
+					destroyAllWindows();
+					break;
+				}
+				else if (key_pressed == 'r') {
+					cout << "Frame at " << random_frame / 1000 << " seconds REJECTED!" << endl;
+					cout << "-------------------------------------------------------------------------" << endl << endl;
+					destroyAllWindows();
+					break;
+				}
+				else if (key_pressed == 'S') {
+					cout << "Interval " << to_string(i + 1) << " SKIPPED!" << endl;
+					cout << "-------------------------------------------------------------------------" << endl << endl;
+					num_frames = MAX_FRAMES;
+					destroyAllWindows();
+					break;
+				}
+			}
+		}
+	}
 }
