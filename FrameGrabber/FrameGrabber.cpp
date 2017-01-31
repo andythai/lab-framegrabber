@@ -297,12 +297,13 @@ static void filter() {
 		
 	}
 
+	/*
 	for (int i = 0; i < (int)intervals.size(); i++) {
 		cout << intervals[i].getLengthSeconds() << endl;
-	}
+	}*/
 
 	cout << "Pruned " << num_pruned << " intervals." << endl;
-	cout << "Total amount of csv intervals: " << intervals.size() << endl;
+	cout << "Total amount of csv intervals left: " << intervals.size() << endl;
 	return;
 }
 
