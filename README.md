@@ -6,6 +6,7 @@ A program written to grab frames from an input video using an input .csv file.
 Input:
 Upon start up, FrameGrabber will prompt the user to input the name of the video file and the corresponding .csv file. These files should be placed within a folder named input inside the program binaries' root directory. 
 It will then scan through the .csv file and grab intervals named "Air Active", "Air Passive", and "Interim". 
+![Input](http://imgur.com/4Rtev4d.png)
 
 
 Filter:
