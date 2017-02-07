@@ -12,7 +12,7 @@ It will then scan through the .csv file and grab intervals named "Air Active", "
 Filter:
 The user will be asked whether or not they want to filter out the intervals by length. If so, an input will be taken and all intervals less than this number in seconds will be pruned. 
 Note: This program will not modify any of the videos or .csv files in any way, so the original data will be safe!
-
+![Filter](http://i.imgur.com/zRoogMt.png)
 
 Active or Passive:
 The user will be asked if they are grabbing frames for the active or passive rat. This is purely for file naming schema. 
@@ -20,6 +20,8 @@ The user will be asked if they are grabbing frames for the active or passive rat
 
 Iteration:
 FrameGrabber will go through all of the intervals and generate a random frame for the current one. The user will be given the option to either accept, reject, or skip. The controls for each are a, r, and S, respectively. User input is only read when the frame window is active.
+![Iteration1](http://i.imgur.com/oH9mLu0.png)
+![Iteration2](http://i.imgur.com/sN7rN89.png)
 
   Accept: This saves the frame to the output folder in a subdirectory named after the video. By default, the program looks for three accepted frames per interval. 
 Files saved will be in the format similar to: 
